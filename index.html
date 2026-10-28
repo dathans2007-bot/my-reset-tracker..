@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#17251f">
+<title>30-Day Reset Tracker</title>
+<style>
+:root{color-scheme:light;--bg:#f4f6f3;--card:#fff;--ink:#17251f;--muted:#66736b;--line:#dce3dd;--accent:#254b3a;--soft:#e8efe9}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:720px;margin:auto;padding:18px 14px 40px}.hero{background:#17251f;color:white;padding:22px;border-radius:22px;margin-bottom:14px}.hero p{color:#d7e2da;margin-bottom:0}.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:#bfd0c4}h1{font-size:1.8rem;line-height:1.12;margin:8px 0}h2{font-size:1.15rem;margin:0 0 10px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:var(--soft);padding:12px;border-radius:13px}.num{font-size:1.5rem;font-weight:750}.muted{color:var(--muted);font-size:.9rem}.bar{height:8px;background:#e4e9e5;border-radius:99px;overflow:hidden;margin-top:8px}.bar span{display:block;height:100%;background:var(--accent);width:0}.dayrow{display:flex;gap:8px;align-items:center}.dayrow select{flex:1;min-width:0}select,input,textarea,button{font:inherit}select,input,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:white;color:var(--ink)}button{border:0;border-radius:12px;padding:11px 13px;background:var(--accent);color:white;font-weight:650;cursor:pointer}button.secondary{background:var(--soft);color:var(--ink);border:1px solid var(--line)}button:disabled{opacity:.35}.habit{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line)}.habit:last-child{border-bottom:0}.habit input{width:22px;height:22px;margin:3px 0 0;accent-color:var(--accent);flex-shrink:0}.habit strong{display:block}.habit small{display:block;color:var(--muted);margin-top:3px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.full{width:100%;margin-top:8px}.note{min-height:100px;resize:vertical}.tiny{font-size:.8rem;color:var(--muted)}.date{font-weight:700}.footer{text-align:center;color:var(--muted);font-size:.82rem;padding:14px}
+</style>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#17251f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Reset Tracker">
+
+</head>
+<body><main>
+<section class="hero"><div class="eyebrow">15 December 2026 – 13 January 2027</div><h1>30-Day Reset Tracker 🥊</h1><p>Small promises. Repeatable days. Progress over perfection.</p></section>
+<section class="card"><div class="stats"><div class="stat"><div class="muted">Habit-days completed</div><div class="num" id="total">0 / 150</div></div><div class="stat"><div class="muted">Days with progress</div><div class="num" id="active">0 / 30</div></div></div><div class="muted" style="margin-top:12px">Overall progress <b id="percent">0%</b></div><div class="bar"><span id="overallbar"></span></div></section>
+<section class="card"><h2>Daily dashboard</h2><div class="dayrow"><button class="secondary" id="prev">←</button><select id="day"></select><button class="secondary" id="next">→</button></div><p class="date" id="dateLabel"></p><div class="muted" id="dailyProgress">0 of 5 habits completed</div><div class="bar"><span id="daybar"></span></div><div id="habits"></div></section>
+<section class="card"><h2>Smoking log</h2><p class="muted">Record the actual number of cigarettes smoked. Enter 0 if you smoked none.</p><label for="cigs">Cigarettes today</label><input id="cigs" type="number" min="0" max="100" inputmode="numeric" placeholder="e.g. 8"></section>
+<section class="card"><h2>Daily journal</h2><p class="muted">What went well? What got in the way? What will I do tomorrow?</p><textarea id="journal" class="note" placeholder="Write a few honest lines..."></textarea></section>
+<section class="card"><h2>Backup your progress</h2><p class="muted">Your entries save on this device/browser. Export a backup regularly, especially before clearing browser data or changing phones.</p><div class="actions"><button id="export">Export backup</button><button class="secondary" id="importBtn">Import backup</button></div><input type="file" id="importFile" accept="application/json,.json" hidden><button class="secondary full" id="csv">Download CSV</button><button class="secondary full" id="print">Print / Save as PDF</button><button class="secondary full" id="reset">Reset all data</button><p class="tiny">If you use “Add to Home screen,” open this same file from your phone's browser. Some Android browsers may not keep local data for files opened directly, so keep backups.</p></section>
+<div class="footer">You don't need a perfect day. Just return to the plan.</div>
+</main>
+<script>
+const START = new Date(Date.UTC(2026,11,15));
+const H = [
+{id:'sleep',name:'Sleep routine',detail:'Keep a consistent wake-up time and aim for 7–9 hours.'},
+{id:'food',name:'Regular meals',detail:'Eat planned, balanced meals without compensatory restriction.'},
+{id:'movement',name:'Movement',detail:'Walk 5–10 minutes or complete your planned workout.'},
+{id:'smoking',name:'Smoking quit plan',detail:'Follow your quit plan and practise responding to cravings.'},
+{id:'journal',name:'Daily reflection',detail:"Record a win, an obstacle, and tomorrow's plan."}
+];
+const KEY='reset30dec2026_v1';
+let data={checks:{},cigs:{},notes:{}};
+const $=id=>document.getElementById(id);
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&typeof x==='object')data={...data,...x}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+function dateFor(d){let x=new Date(START.getTime()+(d-1)*86400000);return x.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'})}
+function selected(){return Number($('day').value||1)}
+function renderDays(){for(let d=1;d<=30;d++){let o=document.createElement('option');o.value=d;o.textContent=`Day ${d} · ${dateFor(d).replace(/ \d{4}$/,'')}`;$('day').appendChild(o)}}
+function render(){const d=selected();$('dateLabel').textContent=dateFor(d);$('habits').innerHTML='';
+H.forEach(h=>{let label=document.createElement('label');label.className='habit';let cb=document.createElement('input');cb.type='checkbox';cb.checked=!!data.checks[d+'-'+h.id];cb.addEventListener('change',()=>{data.checks[d+'-'+h.id]=cb.checked;save();render()});let div=document.createElement('div');let strong=document.createElement('strong');strong.textContent=h.name;let small=document.createElement('small');small.textContent=h.detail;div.append(strong,small);label.append(cb,div);$('habits').append(label)});
+$('cigs').value=data.cigs[d]??'';$('journal').value=data.notes[d]??'';
+const count=H.filter(h=>data.checks[d+'-'+h.id]).length; $('dailyProgress').textContent=`${count} of 5 habits completed`;$('daybar').style.width=(count/5*100)+'%';
+let total=0,active=0;for(let n=1;n<=30;n++){let any=false;H.forEach(h=>{if(data.checks[n+'-'+h.id]){total++;any=true}});if(any)active++}
+$('total').textContent=`${total} / 150`;$('active').textContent=`${active} / 30`;$('percent').textContent=Math.round(total/150*100)+'%';$('overallbar').style.width=(total/150*100)+'%';$('prev').disabled=d===1;$('next').disabled=d===30}
+$('day').addEventListener('change',render);$('prev').onclick=()=>{$('day').value=Math.max(1,selected()-1);render()};$('next').onclick=()=>{$('day').value=Math.min(30,selected()+1);render()};
+$('cigs').addEventListener('input',()=>{let d=selected();data.cigs[d]=$('cigs').value;save()});
+$('journal').addEventListener('input',()=>{let d=selected();data.notes[d]=$('journal').value;save()});
+function download(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('export').onclick=()=>download('30-day-reset-backup.json',JSON.stringify({challenge:'30-Day Reset',start:'2026-12-15',end:'2027-01-13',data},null,2),'application/json');
+$('importBtn').onclick=()=>$('importFile').click();
+$('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const obj=JSON.parse(await f.text());data=obj.data||obj;if(!data.checks)data.checks={};if(!data.cigs)data.cigs={};if(!data.notes)data.notes={};save();render();alert('Backup imported.')}catch(err){alert('That backup file could not be read.')}e.target.value=''};
+$('csv').onclick=()=>{let rows=[['Day','Date','Sleep routine','Regular meals','Movement','Smoking quit plan','Daily reflection','Cigarettes','Journal']];for(let d=1;d<=30;d++)rows.push([d,dateFor(d),...H.map(h=>data.checks[d+'-'+h.id]?'Done':'Not done'),data.cigs[d]??'',data.notes[d]??'']);const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');download('30-day-reset-progress.csv',csv,'text/csv;charset=utf-8')};
+$('print').onclick=()=>window.print();
+$('reset').onclick=()=>{if(confirm('Delete all tracker progress on this device? Export a backup first if you want to keep it.')){data={checks:{},cigs:{},notes:{}};save();render()}};
+load();renderDays();render();
+</script>
+<script>
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+}
+</script>
+
+</body></html>
